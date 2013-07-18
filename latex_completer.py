@@ -34,7 +34,8 @@ class LatexCompleter( ThreadedCompleter ):
         # we only want to be called for \cite{} and \ref{} completions,
         # otherwise the default completer will be just fine
         if (vim.current.line[start_col-1:start_col+5] == r'\cite{') or \
-           (vim.current.line[start_col-1:start_col+4] == r'\ref{'):
+           (vim.current.line[start_col-1:start_col+4] == r'\ref{')  or \
+           (vim.current.line[start_col-1:start_col+5] == r'\vref{'):
             return True
 
         return super( LatexCompleter, self ).ShouldUseNowInner( start_col )
@@ -52,16 +53,17 @@ class LatexCompleter( ThreadedCompleter ):
         This function triggers a query for completion
         candidates.
         """
-        f = file("log", "a")
+        #f = file("log", "a")
         data = vim.current.line
 
-        f.write("CandidatesForQueryAsyncInner: q %s col %d\n" % (query, start_col))
+        #f.write("CandidatesForQueryAsyncInner: q %s col %d\n" % (query, start_col))
 
         # Check if we are completing either a \cite{} or a \ref{}. If so,
         # set the completion target type.
         if data[start_col-5:start_col-1] == "cite":
             self.complete_target = self.CITATIONS
-        elif data[start_col-4:start_col-1] == "ref":
+        elif data[start_col-4:start_col-1] == "ref" or \
+             data[start_col-5:start_col-1] == "vref":
             self.complete_target = self.LABELS
 
         super(LatexCompleter, self).CandidatesForQueryAsyncInner(query, start_col)
