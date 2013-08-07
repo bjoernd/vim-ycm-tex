@@ -34,6 +34,9 @@ Are there limitations?
 
 Of course:
 
+* The completer uses hard-coded Linux shell commands and therefore won't work
+  on Windows.
+
 * The BIB completion only considers BIB files in the current working directory.
 
 * BIB entries are assumed to start at the beginning of a line and have the format:
