@@ -92,7 +92,7 @@ class LatexCompleter( ThreadedCompleter ):
                                         stdin=cat_process.stdout,
                                         stdout=subprocess.PIPE)
         cat_process.stdout.close()
-        grep2_process = subprocess.Popen(shlex.split("grep -v @string"),
+        grep2_process = subprocess.Popen(shlex.split("grep -vi @string"),
                                          stdin=grep_process.stdout,
                                          stdout=subprocess.PIPE)
         grep_process.stdout.close()
@@ -116,7 +116,7 @@ class LatexCompleter( ThreadedCompleter ):
         texs = " ".join(glob.glob("*.tex"))
         cat_process  = subprocess.Popen(shlex.split("cat %s" % texs),
                                         stdout=subprocess.PIPE)
-        grep_process = subprocess.Popen(shlex.split(r"grep \label"),
+        grep_process = subprocess.Popen(shlex.split(r"grep \\\\label"),
                                         stdin=cat_process.stdout,
                                         stdout=subprocess.PIPE)
         cat_process.stdout.close()
