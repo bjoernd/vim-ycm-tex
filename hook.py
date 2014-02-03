@@ -17,9 +17,7 @@
 # along with YouCompleteMe.  If not, see <http://www.gnu.org/licenses/>.
 
 from ycm.completers.tex.latex_completer import LatexCompleter
-from ycm import vimsupport
 
-def GetCompleter():
-    vimsupport.PostVimMessage("getcompleter(tex)")
-    return LatexCompleter()
+def GetCompleter( user_options ):
+    return LatexCompleter( user_options )
 

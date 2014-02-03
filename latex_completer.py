@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 
-import vim
 import re
 import subprocess
 import shlex
 import glob
+import logging
 
-from ycm.completers.threaded_completer import ThreadedCompleter
+from ycm.completers.completer import Completer
+from ycm.server import responses
 
-class LatexCompleter( ThreadedCompleter ):
+LOG = logging.getLogger(__name__)
+
+class LatexCompleter( Completer ):
     """
     Completer for LaTeX that takes into account BibTex entries
     for completion.
@@ -20,12 +23,16 @@ class LatexCompleter( ThreadedCompleter ):
     CITATIONS = 1
     LABELS    = 2
 
-    def __init__( self ):
+    def __init__( self, user_options ):
+        super( LatexCompleter, self ).__init__( user_options )
         self.complete_target = self.NONE
-        super( LatexCompleter, self ).__init__()
 
 
-    def ShouldUseNowInner( self, start_col ):
+    def DebugInfo( self, request_data ):
+        return "TeX completer %d" % self.complete_target
+
+
+    def ShouldUseNowInner( self, request_data ):
         """
         Used by YCM to determine if we want to be called for the
         current buffer state.
@@ -33,12 +40,24 @@ class LatexCompleter( ThreadedCompleter ):
 
         # we only want to be called for \cite{} and \ref{} completions,
         # otherwise the default completer will be just fine
-        if (vim.current.line[start_col-1:start_col+5] == r'\cite{') or \
-           (vim.current.line[start_col-1:start_col+4] == r'\ref{')  or \
-           (vim.current.line[start_col-1:start_col+5] == r'\vref{'):
+
+        line = request_data["line_value"]
+        col  = request_data["start_column"]
+        LOG.debug('"%s"' % line)
+        LOG.debug("'%s'" % line[col-5:col])
+
+        if (line[col-6:col] == r'\cite{'):
+            self.complete_target = self.CITATIONS
+            LOG.debug("complete target %d" % self.complete_target)
             return True
 
-        return super( LatexCompleter, self ).ShouldUseNowInner( start_col )
+        if (line[col-5:col] == r'\ref{')  or \
+           (line[col-6:col] == r'\vref{'):
+            self.complete_target = self.LABELS
+            LOG.debug("complete target %d" % self.complete_target)
+            return True
+
+        return super( LatexCompleter, self ).ShouldUseNowInner( request_data )
 
 
     def SupportedFiletypes( self ):
@@ -46,27 +65,6 @@ class LatexCompleter( ThreadedCompleter ):
         Determines which vim filetypes we support
         """
         return ['plaintex', 'tex']
-
-
-    def CandidatesForQueryAsyncInner(self, query, start_col):
-        """
-        This function triggers a query for completion
-        candidates.
-        """
-        #f = file("log", "a")
-        data = vim.current.line
-
-        #f.write("CandidatesForQueryAsyncInner: q %s col %d\n" % (query, start_col))
-
-        # Check if we are completing either a \cite{} or a \ref{}. If so,
-        # set the completion target type.
-        if data[start_col-5:start_col-1] == "cite":
-            self.complete_target = self.CITATIONS
-        elif data[start_col-4:start_col-1] == "ref" or \
-             data[start_col-5:start_col-1] == "vref":
-            self.complete_target = self.LABELS
-
-        super(LatexCompleter, self).CandidatesForQueryAsyncInner(query, start_col)
 
 
     def _FindBibEntries(self):
@@ -101,7 +99,10 @@ class LatexCompleter( ThreadedCompleter ):
 
         ret = []
         for l in lines.split("\n"):
-            ret.append(re.sub(r"@(.*){([^,]*).*", r"\2", l))
+            ret.append(responses.BuildCompletionData(
+                    re.sub(r"@(.*){([^,]*).*", r"\2", l)
+                )
+            )
         return ret
 
 
@@ -125,16 +126,20 @@ class LatexCompleter( ThreadedCompleter ):
 
         ret = []
         for label in lines.split("\n"):
-            ret.append(re.sub(r".*\label{(.*)}.*", r"\1", label))
+            ret.append(responses.BuildCompletionData(
+                    re.sub(r".*\label{(.*)}.*", r"\1", label)
+                )
+            )
 
         return ret
 
 
-    def ComputeCandidates( self, query, col ):
+    def ComputeCandidatesInner( self, request_data ):
         """
         Worker function executed by the asynchronous
         completion thread.
         """
+        LOG.debug("compute candidates %d" % self.complete_target)
         if self.complete_target == self.LABELS:
             return self._FindLabels()
         if self.complete_target == self.CITATIONS:
