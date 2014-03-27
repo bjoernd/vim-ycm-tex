@@ -67,6 +67,28 @@ class LatexCompleter( Completer ):
         return ['plaintex', 'tex']
 
 
+    def _FindBibFiles(self, texfile):
+        """
+        Parse the given tex file (name) to find the bib files included.
+        """
+        biblist = []
+        # TODO This regex is not very robust.  Which characters my apear in
+        # bib filenames?  Doesn't \bibliography{} accept a comma seperated
+        # list?
+        regex = re.compile(r'^[^%]*\\bibliography\s*{(.*)}.*$')
+        for line in open(texfile):
+            match = regex.search(line)
+            if match != None:
+                biblist.append(match.group(1) + '.bib')
+
+        # If no bib files where found in the tex file use the bib files in the
+        # current directory.
+        if biblist == []:
+            biblist.append(glob.glob("*.bib"))
+
+        return biblist
+
+
     def _FindBibEntries(self):
         """
         Find BIBtex entries.
