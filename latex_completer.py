@@ -100,7 +100,7 @@ class LatexCompleter( Completer ):
         ret = []
         for l in lines.split("\n"):
             ret.append(responses.BuildCompletionData(
-                    re.sub(r"@([A-Za-z]*)\s*{([^,]*).*", r"\2", l)
+                    re.sub(r"@([A-Za-z]*)\s*{\s*([^,]*),.*", r"\2", l)
                 )
             )
         return ret
