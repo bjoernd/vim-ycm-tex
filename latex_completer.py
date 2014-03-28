@@ -77,14 +77,13 @@ class LatexCompleter( Completer ):
         # list?
         regex = re.compile(r'^[^%]*\\bibliography\s*{([^}]*)}.*$')
         for line in open(texfile):
-            match = regex.search(line)
-            if match != None:
-                biblist.append(match.group(1) + '.bib')
+            if r'\bibliography' in line:
+                biblist.append(regex.sub(r'\1', line) + '.bib')
 
         # If no bib files where found in the tex file use the bib files in the
         # current directory.
         if biblist == []:
-            biblist.append(glob.glob("*.bib"))
+            biblist = glob.glob("*.bib")
 
         return biblist
 
