@@ -75,7 +75,7 @@ class LatexCompleter( Completer ):
         # TODO This regex is not very robust.  Which characters my apear in
         # bib filenames?  Doesn't \bibliography{} accept a comma seperated
         # list?
-        regex = re.compile(r'^[^%]*\\bibliography\s*{(.*)}.*$')
+        regex = re.compile(r'^[^%]*\\bibliography\s*{([^}]*)}.*$')
         for line in open(texfile):
             match = regex.search(line)
             if match != None:
