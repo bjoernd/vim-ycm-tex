@@ -5,6 +5,7 @@ import subprocess
 import shlex
 import glob
 import logging
+import os.path
 
 from ycm.completers.completer import Completer
 from ycm.server import responses
@@ -69,9 +70,14 @@ class LatexCompleter( Completer ):
 
     def _FindBibFiles(self, texfile):
         """
-        Parse the given tex file (name) to find the bib files included.
+        Parse the given tex file (name) to find the bib files included.  All
+        bibfiles are turned into full path names and are tested to actually
+        exist.
+
+        Retuns a list of absolute filenames (possiblly empty).
         """
         biblist = []
+        result = []
         # TODO This regex is not very robust.  Which characters my apear in
         # bib filenames?  Doesn't \bibliography{} accept a comma seperated
         # list?
@@ -83,7 +89,20 @@ class LatexCompleter( Completer ):
         # If no bib files where found in the tex file use the bib files in the
         # current directory.
         if biblist == []:
-            biblist = glob.glob("*.bib")
+            result = [os.path.abspath(x) for x in glob.glob("*.bib")]
+        # else build a absolute path name
+        else:
+            todo = []
+            directory = texfile
+            while directory != '/': # FIXME this might not be robust
+                directory = os.path.dirname(directory)
+                for bib in bibfiles:
+                    if os.path.exists(os.path.join(directory, bib)):
+                        result.append(os.path.join(directory, bib))
+                    else:
+                        todo.append(bib)
+                bibfiles = todo
+                todo = []
 
         return biblist
 
