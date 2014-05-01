@@ -123,26 +123,30 @@ class LatexCompleter( Completer ):
         The search is done by a shell pipe:
             cat *.bib | grep ^@ | grep -v @string
         """
-        bibs = " ".join(glob.glob("*.bib"))
-        cat_process  = subprocess.Popen(shlex.split("cat %s" % bibs),
-                                        stdout=subprocess.PIPE)
-        grep_process = subprocess.Popen(shlex.split("grep ^@"),
-                                        stdin=cat_process.stdout,
-                                        stdout=subprocess.PIPE)
-        cat_process.stdout.close()
-        grep2_process = subprocess.Popen(shlex.split("grep -vi @string"),
-                                         stdin=grep_process.stdout,
-                                         stdout=subprocess.PIPE)
-        grep_process.stdout.close()
-
-        lines = grep2_process.communicate()[0]
-
+#        bibs = " ".join(glob.glob("*.bib"))
+#        cat_process  = subprocess.Popen(shlex.split("cat %s" % bibs),
+#                                        stdout=subprocess.PIPE)
+#        grep_process = subprocess.Popen(shlex.split("grep ^@"),
+#                                        stdin=cat_process.stdout,
+#                                        stdout=subprocess.PIPE)
+#        cat_process.stdout.close()
+#        grep2_process = subprocess.Popen(shlex.split("grep -vi @string"),
+#                                         stdin=grep_process.stdout,
+#                                         stdout=subprocess.PIPE)
+#        grep_process.stdout.close()
+#
+#        lines = grep2_process.communicate()[0]
+#
         ret = []
-        for l in lines.split("\n"):
-            ret.append(responses.BuildCompletionData(
-                    re.sub(r"@([A-Za-z]*)\s*{\s*([^,]*),.*", r"\2", l)
-                )
-            )
+#        for l in lines.split("\n"):
+#            ret.append(responses.BuildCompletionData(
+#                    re.sub(r"@(.*){([^,]*).*", r"\2", l)
+#                )
+#            )
+        regex = re.compile(r"@([A-Za-z]*)\s*{\s*([^,]*),.*")
+        for bibfile in self._FindBibFiles('/dev/null'):
+            for key in self._FindBibEntries(bibfile):
+                ret.append(responses.BuildCompletionData(key))
         return ret
 
 
