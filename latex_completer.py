@@ -96,12 +96,12 @@ class LatexCompleter( Completer ):
             directory = texfile
             while directory != '/': # FIXME this might not be robust
                 directory = os.path.dirname(directory)
-                for bib in bibfiles:
+                for bib in biblist:
                     if os.path.exists(os.path.join(directory, bib)):
                         result.append(os.path.join(directory, bib))
                     else:
                         todo.append(bib)
-                bibfiles = todo
+                biblist = todo
                 todo = []
 
         return biblist
@@ -144,6 +144,18 @@ class LatexCompleter( Completer ):
                 )
             )
         return ret
+
+
+    def _ParseBibFile(self, bibfile):
+        """
+        Parse a .bib file and return a list of bib keys.
+        """
+        regex = re.compile(r'@[A-Za-z]*\s*{\s*([^,]*),.*')
+        keylist = []
+        for line in open(bibfile):
+            if '@' in line:
+                keylist.append(regex.sub(r'\1', line))
+        return keylist
 
 
     def _FindLabels(self):
